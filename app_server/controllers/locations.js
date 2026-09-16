@@ -5,7 +5,7 @@ const homelist = (req, res) => {
 
 /* GET 'Location info' page */
 const locationInfo = (req, res) => {
-    res.render('location-info', { title: 'Location info'});
+    res.render('location-info', { title: 'Location info', pageHeader: 'Starcups'});
 };
 
 /* GET 'Add review' page */
