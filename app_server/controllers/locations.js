@@ -1,6 +1,6 @@
 /* GET 'home' page */
 const homelist = (req, res) => {
-    res.render('location-list', { title: 'Home'});
+    res.render('location-list', { title: 'Home', pageHeader: 'Starcups'});
 };
 
 /* GET 'Location info' page */
