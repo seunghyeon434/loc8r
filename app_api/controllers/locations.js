@@ -4,9 +4,18 @@ const Loc = mongoose.model('Location');
 const locationsReadOne = async (req, res) => {
     try {
         const location = await Loc.findById(req.params.locationid).exec();
-        res.status(200).json(location);
+        if (!location) {
+            return res
+                .status(404)
+                .json({ "message": "location not found" });
+        }
+        return res
+            .status(200)
+            .json(location);
     } catch (err) {
-        res.status(500).json({ error: 'An error occurred.' });
+        return res
+            .status(400)
+            .json(err);
     }
 };
 
