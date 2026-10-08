@@ -133,7 +133,36 @@ const reviewsUpdateOne = async (req, res) => {
     return res.status(400).json(err);
   }
 };
-const reviewsDeleteOne = (req, res) => {};
+
+const reviewsDeleteOne = async (req, res) => {
+  const { locationid, reviewid } = req.params;
+  if (!locationid || !reviewid) {
+    return res.status(404).json({ 'message': 'Not found, locationid and reviewid are both required' });
+  }
+
+  try {
+    const location = await Loc.findById(locationid).select('reviews').exec();
+    if (!location) {
+      return res.status(404).json({ 'message': 'Location not found' });
+    }
+
+    if (location.reviews && location.reviews.length > 0) {
+      const review = location.reviews.id(reviewid);
+      if (!review) {
+        return res.status(404).json({ 'message': 'Review not found' });
+      }
+
+      review.deleteOne();
+      await location.save();
+      await updateAverageRating(location._id);
+      return res.status(204).json(null);
+    } else {
+      return res.status(404).json({ 'message': 'No Review to delete' });
+    }
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
 
 module.exports = {
   reviewsCreate,

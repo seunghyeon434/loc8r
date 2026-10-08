@@ -152,7 +152,34 @@ const locationsUpdateOne = async (req, res) => {
       .json(err);
   }
 };
-const locationsDeleteOne = (req, res) => {};
+
+const locationsDeleteOne = async (req, res) => {
+  const { locationid } = req.params;
+  if (!locationid) {
+    return res
+      .status(404)
+      .json({
+        "message": "No Location"
+      });
+  }
+  try {
+    const location = await Loc.findByIdAndDelete(locationid).exec();
+    if (!location) {
+      return res
+        .status(404)
+        .json({
+          "message": "locationid not found"
+        });
+    }
+    return res
+      .status(204)
+      .json(null);
+  } catch (err) {
+    return res
+      .status(404)
+      .json(err);
+  }
+};
 
 module.exports = {
   locationsListByDistance,
