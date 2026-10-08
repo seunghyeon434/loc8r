@@ -102,7 +102,37 @@ const reviewsReadOne = async (req, res) => {
   }
 };
 
-const reviewsUpdateOne = (req, res) => {};
+const reviewsUpdateOne = async (req, res) => {
+  if (!req.params.locationid || !req.params.reviewid) {
+    return res.status(404).json({ "message": "Not found, locationid and reviewid are both required" });
+  }
+
+  try {
+    const location = await Loc.findById(req.params.locationid).select('reviews').exec();
+    if (!location) {
+      return res.status(404).json({ "message": "Location not found" });
+    }
+
+    if (location.reviews && location.reviews.length > 0) {
+      const thisReview = location.reviews.id(req.params.reviewid);
+      if (!thisReview) {
+        return res.status(404).json({ "message": "Review not found" });
+      }
+
+      thisReview.author = req.body.author;
+      thisReview.rating = req.body.rating;
+      thisReview.reviewText = req.body.reviewText;
+
+      const updatedLocation = await location.save();
+      await updateAverageRating(updatedLocation._id);
+      return res.status(200).json(thisReview);
+    } else {
+      return res.status(404).json({ "message": "No review to update" });
+    }
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
 const reviewsDeleteOne = (req, res) => {};
 
 module.exports = {
