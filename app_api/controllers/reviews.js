@@ -1,7 +1,69 @@
 const mongoose = require('mongoose');
 const Loc = mongoose.model('Location');
 
-const reviewsCreate = (req, res) => {};
+const doSetAverageRating = async (location) => {
+  if (location.reviews && location.reviews.length > 0) {
+    const count = location.reviews.length;
+    const total = location.reviews.reduce((acc, {rating}) => {
+      return acc + rating;
+    }, 0);
+
+    location.rating = parseInt(total / count, 10);
+    try {
+      await location.save();
+      console.log(`Average rating updated to ${location.rating}`);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+};
+
+const updateAverageRating = async (locationId) => {
+  try {
+    const location = await Loc.findById(locationId).select('rating reviews').exec();
+    if (location) {
+      await doSetAverageRating(location);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const doAddReview = async (req, res, location) => {
+  if (!location) {
+    return res.status(404).json({ "message": "Location not found" });
+  }
+
+  const { author, rating, reviewText } = req.body;
+  location.reviews.push({ author, rating, reviewText });
+
+  try {
+    const updatedLocation = await location.save();
+    await updateAverageRating(updatedLocation._id);
+    const thisReview = updatedLocation.reviews.slice(-1).pop();
+    return res.status(201).json(thisReview);
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
+
+const reviewsCreate = async (req, res) => {
+  const locationId = req.params.locationid;
+  if (!locationId) {
+    return res.status(404).json({ "message": "Location not found" });
+  }
+
+  try {
+    const location = await Loc.findById(locationId).select('reviews').exec();
+    if (location) {
+      await doAddReview(req, res, location);
+    } else {
+      return res.status(404).json({ "message": "Location not found" });
+    }
+  } catch (err) {
+    return res.status(400).json(err);
+  }
+};
 
 const reviewsReadOne = async (req, res) => {
   try {
