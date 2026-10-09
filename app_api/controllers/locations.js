@@ -69,6 +69,32 @@ const locationsReadOne = async (req, res) => {
 
 const locationsCreate = async (req, res) => {
   try {
+    const openingTimes = [
+      {
+        days: req.body.days1,
+        opening: req.body.opening1,
+        closing: req.body.closing1,
+        closed: req.body.closed1
+      }
+    ];
+
+    if (req.body.days2 && req.body.days2.trim()) {
+      openingTimes.push({
+        days: req.body.days2,
+        opening: req.body.opening2,
+        closing: req.body.closing2,
+        closed: req.body.closed2
+      });
+      if (req.body.days3 && req.body.days3.trim()) {
+        openingTimes.push({
+          days: req.body.days3,
+          opening: req.body.opening3,
+          closing: req.body.closing3,
+          closed: req.body.closed3
+      });
+      }
+    }
+
     const location = await Loc.create({
       name: req.body.name,
       address: req.body.address,
@@ -80,25 +106,12 @@ const locationsCreate = async (req, res) => {
           parseFloat(req.body.lat)
         ]
       },
-      openingTimes: [
-        {
-          days: req.body.days1,
-          opening: req.body.opening1,
-          closing: req.body.closing1,
-          closed: req.body.closed1
-        },
-        {
-          days: req.body.days2,
-          opening: req.body.opening2,
-          closing: req.body.closing2,
-          closed: req.body.closed2
-        }
-      ]
+      openingTimes
     });
+
     return res
       .status(201)
       .json(location);
-
   } catch (err) {
     return res
       .status(400)
@@ -115,6 +128,32 @@ const locationsUpdateOne = async (req, res) => {
       });
   }
   try {
+    const openingTimes = [
+      {
+        days: req.body.days1,
+        opening: req.body.opening1,
+        closing: req.body.closing1,
+        closed: req.body.closed1
+      }
+    ];
+
+    if (req.body.days2 && req.body.days2.trim()) {
+      openingTimes.push({
+        days: req.body.days2,
+        opening: req.body.opening2,
+        closing: req.body.closing2,
+        closed: req.body.closed2
+      });
+      if (req.body.days3 && req.body.days3.trim()) {
+        openingTimes.push({
+          days: req.body.days3,
+          opening: req.body.opening3,
+          closing: req.body.closing3,
+          closed: req.body.closed3
+      });
+      }
+    }
+
     const location = await Loc.findById(req.params.locationid).select('-reviews -rating').exec();
     
     if (!location) {
@@ -127,21 +166,14 @@ const locationsUpdateOne = async (req, res) => {
     location.name = req.body.name;
     location.address = req.body.address;
     location.facilities = req.body.facilities.split(',');
-    location.coords = [
-      parseFloat(req.body.lng),
-      parseFloat(req.body.lat)
-    ];
-    location.openingTimes = [{
-      days: req.body.days1,
-      opening: req.body.opening1,
-      closing: req.body.closing1,
-      closed: req.body.closed1,
-    }, {
-      days: req.body.days2,
-      opening: req.body.opening2,
-      closing: req.body.closing2,
-      closed: req.body.closed2,
-    }];
+    location.coords = {
+      type: "Point",
+      coordinates: [
+        parseFloat(req.body.lng),
+        parseFloat(req.body.lat)
+      ]
+    };
+    location.openingTimes = openingTimes;
     const updatedLocation = await location.save();
     return res
       .status(200)
