@@ -1,43 +1,38 @@
-마지막 과제입니다. 메인 장소/서브 리뷰 다큐먼트 DELETE 요청을 처리하는 컨트롤러 상-변수인 locationsDeleteOne, reviewsDeleteOne을 만든 틀을 가지고 완성하게 되었습니다.
-삭제라서 간단한 부분도 있습니다.
+첫번째 과제입니다. 우리가 만든 API를 토대로 이제 사이트에서 이를 사용하여 데이터를 불러와서 출력시킬 수 있게 해주는 실습 과제입니다.
+기존 renderHomepage 컨트롤러를 수정하여 더 이상 우리가 직접 사이트 정보를 기재하지 않고 DB에서 데이터를 가져올 수 있게 했습니다.
 
-locationsDelete부터 설명하겠습니다.
-req.params에서 locationid를 가져옵니다. 이게 없으면 삭제 자체를 못하므로
-if문에서 이를 검사하여 if (!locationid)에서 걸리면 return res문에 가서 404 에러 코드와 장소 없음이라는 메시지를 json으로 출력합니다.
-걸리지 않으면 locationid가 정상적으로 있다는 뜻이니 try-catch문으로 갑니다.
+먼저, api를 사용하기 위해서 요청 API인 request를 설치한 후 서버의 locations.js에서 사용할 수 있도록 request라는 변수로 가져왔습니다.
+한편, api 사용을 위한 옵션으로 apiOption이라는 상-변수를 만들어 필요한 정보들을 기입합니다.
+특이한 건 API 콜을 하기 위한 모든 컨트롤러는 어떤 환경인지 확인하는 일을 피하기 위해 디폴트 설정 옵션을 설정할 수 있습니다.
 
-이 id를 findByIdAndDelete 메서드에 줘서 우리가 원하는 문서가 찾은 뒤 삭제될 수 있게 한 뒤 exec() 메서드에 연결하여 실행시킵니다.
-원래 문서는 const 상-변수인 location에 저장되게 합니다. (findByIdAndRemove에서 Remove가 Delete로 변경되었습니다.)
-만약 location이 애초에 존재하지 않는다면 locationid로 원래 문서를 찾을 수 없다는 뜻이라, 404 에러 코드와 장소 코드로 못 찾았다고 메시지를 출력하도록
-if문을 구성했습니다.
+apiOptions에 server, 서버 주소와 if문을 달아 process.env.NODE_ENV가 production, 즉 제품 환경이라면
+server는 'https://yourapi.com"으로 쓰이도록 했습니다. 따라서 제품 환경이 아니라면 일반 서버 주소를 사용하고 아니라면 이 주소를 사용하게 했습니다.
+일반 서버 주소는 'http://localhost:3000'입니다. 우린 아직 저 일반 서버 주소를 쓰는 편이 많죠.
 
-이 if문에 걸리지 않는다면 정말로 삭제가 된 것으로 에러가 없는 이상 return res문을 만나 204 상태 코드와 null을 json으로 출력합니다.
-삭제가 되었기에 딱히 출력하는 것이 없는 것입니다.
+다음으로 요청을 할 때 옵션을 requestOptions로 지정했습니다.
+내부 내용은 다음과 같습니다. 어디서 데려올 지 url을 지정했습니다. 우리가 위에서 지정한 server 주소 자체가 url입니다.
+method는 내용을 가져오니 'GET', json 객체는 사이트에 있던 오리지널 데이터가 필요 없으니 공백으로 해뒀으나 qs, 즉 쿼리 스트링으로는
+lng와 lat에 제 집 좌표를, maxDistance는 200000으로 반경 200km의 장소들을 찾아 띄우게 정하여 요청에 사용되도록 만들었습니다.
 
-만약 중간 과정에서 에러가 발생했다면 catch문에 걸려 err를 감지, 404 에러 코드와 err 자체 정보를 출력했을 겁니다.
+다음으로 이러한 요청 옵션을 가지고 요청이 진행되게 하는 부분입니다.
+request 객체에 requestOptions가 들어가게 하고, 뒤에서 무명 함수 하나를 전개합니다.
+err, response, body를 받아들이는 이 무명 함수는 renderHomepage에 이 세 가지를 모두 넘깁니다.
+err는 에러 시 생기는 에러 객체, response는 응답 상태 메시지를, body는 전달받는 JS 객체들을 뜻합니다.
+이후 renderHomepage에서 작업을 이어가게 만들었습니다.
 
-다음은 reviewsDeleteOne입니다.
-리뷰 삭제에 필요한 문서 메인 문서 id와 리뷰 서브 문서 id를 모두 req.params에서 가져옵니다.
-이후 두 id 중 하나라도 존재하지 않는다면 작업을 할 수 없으므로 if (!locationid || !reviewid) 문에서 이를 처리합니다.
-만약 조건에 걸린다면 return res문으로 404 에러 코드와 두 id가 제대로 가져와지지 않았다고 알려주는 메시지를 출력합니다.
+renderHomepage는 메인 홈페이지를 렌더링하여 pug 창에 띄워주고 덮어씌워줍니다.
+달라진 점은 title, pageHeader, sidebar는 별도의 변경 없이(똑같이) locations에 직접 다 작성하던 장소 정보 코드들을 
+모두 단 한 코드인 locations: responseBody라고 바꿔서 적용시켰습니다. 전달받은 JS 객체에 해당하는 responseBody에
+쿼리 스트링으로 지정한 집 좌표 근처의 장소들 데이터가 들어있게 될 것입니다. 에러가 나지 않아야하겠지만요.
 
-조건에 걸리지 않는다면 두 id 모두 잘 있다는 뜻이니 try-catch문으로 넘어갑니다.
-아까와 마찬가지로 location이라는 const 상-변수에 findById 메서드를 쓰되, 이번에는 바로 삭제하지 않고
-locationid를 전달하여 찾은 뒤 거기서 select 메서드로 reviews만 선택해서 exec에 넘깁니다.
+정리하면 다음과 같습니다.
+homelist 컨트롤러에서 url, method 등등 요청에 필요한 정보들을 만들어서 requestOptions라 묶고, 묶은 정보를 request 함수에 전달,
+request라는 함수는 requestOptions를 가지고 요청 실시, 요청 과정에서 err, response, body에 해당하는 것을 받아 모두 
+renderHomepage 함수에 넘깁니다. renderHomepage는 render 메서드에 title, pageHeader, sidebar 같은 정형화되고 내용이 어느 정도 짧은 것들을
+그대로 두고, locations: responseBody 라고 해서 더 이상 하드코딩하지 않고 장소 데이터를 데리고 와서 출력시키게 했습니다.
+이를 통해서 이제 메인 홈페이지의 장소는 쿼리 스트링에 따라 DB에서 데이터를 불러와서 출력시키게 했습니다.
+(*API에 오픈 일정을 더 잘 추가하고, 업데이트할 수 있도록 기존 11번 과제 코드를 개선했습니다.)
 
-이후 location이 존재하지 않는다면 if문에서 이를 감지하여 404 에러 코드와 이에 따른 메시지를 출력하는 것은 똑같습니다.
-다음 검사에서는 location에 리뷰들(reviews)가 존재하는 지와 갯수(길이)가 0보다 큰 1 이상인 지를 확인하는 조건을 if문으로 거칩니다.
-여기를 통과한다면 reviews가 정상적으로 있다는 뜻입니다. 통과하지 못할 경우, else문에서 404 에러 코드와 삭제할 리뷰가 없다는 메시지를 출력하게 됩니다.
 
-다음으로 URL에서 가져온 reviewid를 location.reviews.id에 넣어서 우리가 삭제할 리뷰를 지정해서 review라는 const 상-변수에 넣습니다.
-다음으로 review가 혹시 존재하지 않는 것일 수 있으니 if문에서 if (!review) 문으로 차단하여 return res문에 들어가
-404코드와 리뷰가 존재하지 않는 메시지를 출력하게 할 수 있습니다.
 
-여길 지나간다면 삭제할 리뷰가 존재하는 리뷰인 건 확실합니다.
-이제 Delete 메서드로 이를 삭제한 뒤, location.save 메서드로 이를 최종 저장합니다. (remove 메서드가 Delete 메서드로 변경되었습니다.)
-리뷰가 삭제되면 전체 레이팅에도 영향이 가므로 updateAverageRating에 장소 문서의 id를 전달하여 레이팅 업데이트를 명령한 뒤,
-모든 작업이 끝나면 return res에서 204 상태 코드와 null을 출력하게 하는 구조입니다.
-
-마지막으로 중간에 err, 에러가 발생한다면, catch문에 들어가서 400 에러 코드와 err 에러 자체 정보를 출력하게 될 것입니다.
-모든 출력 화면과 소스 코드는 첨부 파일에서 확인하실 수 있습니다.
 

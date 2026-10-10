@@ -1,37 +1,60 @@
+var request = require('request');
+
+const apiOptions = {
+  server: 'http://localhost:3000/'
+};
+if(process.env.NODE_ENV === 'production'){
+  apiOptions.server = 'https://yourapi.com';
+}
+
+const requestOptions ={
+  url: `${apiOptions.server}`,
+  method: 'GET',
+  json:{},
+  qs:{
+    offset: 20
+  }
+};
+request(requestOptions,(err, response, body) => {
+  if (err) {
+    console.log(err);
+  } if(response.statusCode === 200) {
+    console.log(body);
+  } else {
+    console.log(response.statusCode);
+  }
+});
+
 const homelist = (req, res) => {
-  res.render('location-list',
-    {
+  const path = 'api/locations';
+  const requestOptions = {
+    url: `${apiOptions.server}${path}`,
+    method: 'GET',
+    json: {},
+    qs: {
+      lng: 127.099395,
+      lat: 37.274051,
+      maxDistance: 200000
+    }
+  };
+  request(
+    requestOptions,
+    (err, response, body) => {
+      renderHomepage(req, res, body);
+    }
+  )
+};
+
+const renderHomepage = (req, res, responseBody) => {
+  res.render('location-list', {
       title: 'Loc8r - find a place to work with wifi',
       pageHeader: {
         title: 'Loc8r',
         strapLine: '  Find places to work with wifi near you!'
       },
       sidebar: "Looking for wifi and a seat? Loc8r helps you find places to work when out and about. Perhaps with coffee, cake or a pint? Let Loc8r help you find the place you're looking for.",
-      locations: [
-        {
-          name: 'Starcups',
-          address: '125 High Street, Reading, RG6 1PS',
-          rating: 3,
-          facilities: ['Hot drinks', 'Food', 'Premium wifi'],
-          distance: '100m'
-        },
-        {
-          name: 'Cafe Hero',
-          address: '125 High Street, Reading, RG6 1PS',
-          rating: 4,
-          facilities: ['Hot drinks', 'Food', 'Premium wifi'],
-          distance: '200m'
-        },
-        {
-          name: 'Burger Queen',
-          address: '125 High Street, Reading, RG6 1PS',
-          rating: 2,
-          facilities: ['Food', 'Premium wifi'],
-          distance: '250m'
-        }
-      ]
-    }
-  );
+      locations: responseBody
+    });
 };
 
 const locationInfo = (req, res) => {
