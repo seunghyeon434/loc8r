@@ -105,6 +105,23 @@ const renderDetailPage = (req, res, location) => {
   );
 };
 
+const showError = (req, res, status) => {
+  let title = '';
+  let content = '';
+  if (status === 404) {
+    title = '404, page not found';
+    content = 'Oh dear. Looks like you can\'t find this page, Sorry.';
+  } else {
+    title = `${status}, something's gone wrong`;
+    content = 'Something, somewhere, has gone just a little bit wrong.';
+  }
+  res.status(status);
+  res.render('generic-text', {
+    title,
+    content
+  });
+};
+
 /* GET 'Location info' page */
 const locationInfo = (req, res) => {
   const path = `api/locations/${req.params.locationid}`;
@@ -115,13 +132,17 @@ const locationInfo = (req, res) => {
   };
   request(
     requestOptions,
-    (err, response, body) => {
+    (err, {statusCode}, body) => {
       const data = body;
-      data.coords = {
-        lng: body.coords.coordinates[0],
-        lat: body.coords.coordinates[1]
-      };
-      renderDetailPage(req, res, data);
+      if (statusCode === 200) {
+        data.coords = {
+          lng: body.coords.coordinates[0],
+          lat: body.coords.coordinates[1]
+        };
+        renderDetailPage(req, res, data);
+      } else {
+        showError(req, res, statusCode);
+      }
     }
   )
 }
