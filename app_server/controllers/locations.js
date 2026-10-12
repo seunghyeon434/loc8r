@@ -33,9 +33,9 @@ const homelist = (req, res) => {
     method: 'GET',
     json: {},
     qs: {
-      lng: 1,
-      lat: 1,
-      maxDistance: 0.002
+      lng: 126.975207,
+      lat: 37.574907,
+      maxDistance: 200000
     }
   };
   request(
@@ -89,59 +89,42 @@ const renderHomepage = (req, res, responseBody) => {
     });
 };
 
-const locationInfo = (req, res) => {
+const renderDetailPage = (req, res, location) => {
   res.render('location-info',
     {
-      title: 'Starcups',
-       pageHeader: {
-        title: 'Loc8r',
-      },
+      title: location.name,
+      pageHeader: {
+        title: location.name
+        },
       sidebar: {
         context: 'is on Loc8r because it has accessible wifi and space to sit down with your laptop and get some work done.',
-        callToAction: 'If you\'ve been and you like it - or if you don\'t - please leave a review to help other people just like you.'
+        callToAction: "If you've been and you like it - or if you \ don't - please leave a review to help other people just like you."
       },
-      location: {
-        name: 'Starcups',
-        address: '125 High Street, Reading, RG6 1PS',
-        rating: 3,
-        facilities: ['Hot drinks', 'Food', 'Premium wifi'],
-        coords: {lat: 51.455041, lng: -0.9690884},
-        openingTimes: [
-          {
-            days: 'Monday - Friday',
-            opening: '7:00am',
-            closing: '7:00pm',
-            closed: false
-          },
-          {
-            days: 'Saturday',
-            opening: '8:00am',
-            closing: '5:00pm',
-            closed: false
-          },
-          {
-            days: 'Sunday',
-            closed: true
-          }
-        ],
-        reviews: [
-          {
-            author: 'Seunghyeon Kim',
-            rating: 5,
-            timestamp: '16 July 2013',
-            reviewText: 'What a great place. I can\'t say enough good things about it.'
-          },
-          {
-            author: 'Charlie Chaplin',
-            rating: 3,
-            timestamp: '16 June 2013',
-            reviewText: 'It was okay. Coffee wasn\'t great, but the wifi was fast.'
-          }
-        ]
-      }
+      location: location
     }
   );
 };
+
+/* GET 'Location info' page */
+const locationInfo = (req, res) => {
+  const path = `api/locations/${req.params.locationid}`;
+  const requestOptions = {
+    url: `${apiOptions.server}${path}`,
+    method: 'GET',
+    json: {}
+  };
+  request(
+    requestOptions,
+    (err, response, body) => {
+      const data = body;
+      data.coords = {
+        lng: body.coords[0],
+        lat: body.coords[1]
+      };
+      renderDetailPage(req, res, data);
+    }
+  )
+}
 
 const addReview = (req, res) => {
   res.render('location-review-form',
