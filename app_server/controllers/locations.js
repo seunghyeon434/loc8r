@@ -118,8 +118,8 @@ const locationInfo = (req, res) => {
     (err, response, body) => {
       const data = body;
       data.coords = {
-        lng: body.coords[0],
-        lat: body.coords[1]
+        lng: body.coords.coordinates[0],
+        lat: body.coords.coordinates[1]
       };
       renderDetailPage(req, res, data);
     }
