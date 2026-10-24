@@ -166,6 +166,28 @@ const renderReviewForm = function (req, res, {name}) {
 };
 
 const doAddReview = (req, res) => {
+  const locationid = req.params.locationid;
+  const path = `api/locations/${locationid}/reviews`;
+  const postdata = {
+    author: req.body.name,
+    rating: parseInt(req.body.rating, 10),
+    reviewText: req.body.review
+  };
+  const requestOptions = {
+    url: `${apiOptions.server}${path}`,
+    method: 'POST',
+    json: postdata
+  };
+  request(
+    requestOptions,
+    (err, {statusCode}, body) => {
+      if (statusCode === 201) {
+        res.redirect(`/location/${locationid}`);
+      } else {
+        showError(req, res, statusCode);
+      }
+    }
+  )
 };
 
 module.exports = {
