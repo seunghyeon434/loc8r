@@ -113,7 +113,7 @@ const showError = (req, res, status) => {
     content = 'Oh dear. Looks like you can\'t find this page, Sorry.';
   } else {
     title = `${status}, something's gone wrong`;
-    content = '';
+    content = 'Something, somewhere, has gone just a little bit wrong.';
   }
   res.status(status);
   res.render('generic-text', {
@@ -161,7 +161,8 @@ const addReview = (req, res) => {
 const renderReviewForm = function (req, res, {name}) {
   res.render('location-review-form', {
       title: `Review ${name} on Loc8r`,
-      pageHeader: { title: `Review ${name}` }
+      pageHeader: { title: `Review ${name}` },
+      error: req.query.err
   });
 };
 
@@ -180,9 +181,11 @@ const doAddReview = (req, res) => {
   };
   request(
     requestOptions,
-    (err, {statusCode}, body) => {
+    (err, {statusCode}, {name}) => {
       if (statusCode === 201) {
         res.redirect(`/location/${locationid}`);
+      } else if (statusCode === 400 && name && name === 'ValidationError') {
+        res.redirect(`/location/${locationid}/review/new?err=val`);
       } else {
         showError(req, res, statusCode);
       }
