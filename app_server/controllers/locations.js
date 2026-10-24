@@ -113,7 +113,7 @@ const showError = (req, res, status) => {
     content = 'Oh dear. Looks like you can\'t find this page, Sorry.';
   } else {
     title = `${status}, something's gone wrong`;
-    content = 'Something, somewhere, has gone just a little bit wrong.';
+    content = '';
   }
   res.status(status);
   res.render('generic-text', {
