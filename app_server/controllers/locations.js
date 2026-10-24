@@ -122,8 +122,7 @@ const showError = (req, res, status) => {
   });
 };
 
-/* GET 'Location info' page */
-const locationInfo = (req, res) => {
+const getLocationInfo = (req, res, callback) => {
   const path = `api/locations/${req.params.locationid}`;
   const requestOptions = {
     url: `${apiOptions.server}${path}`,
@@ -139,7 +138,7 @@ const locationInfo = (req, res) => {
           lng: body.coords.coordinates[0],
           lat: body.coords.coordinates[1]
         };
-        renderDetailPage(req, res, data);
+        callback(req, res, data);
       } else {
         showError(req, res, statusCode);
       }
@@ -147,17 +146,31 @@ const locationInfo = (req, res) => {
   )
 }
 
-const addReview = (req, res) => {
-  res.render('location-review-form',
-    {
-      title: 'Review Starcups on Loc8r' ,
-      pageHeader: { title: 'Review Starcups' }
-    }
+const locationInfo = (req, res) => {
+  getLocationInfo(req, res,
+    (req, res, responseData) => renderDetailPage(req, res, responseData)
   );
+};
+
+const addReview = (req, res) => {
+  getLocationInfo(req, res,
+    (req, res, responseData) => renderReviewForm(req, res, responseData)
+  );
+};
+
+const renderReviewForm = function (req, res, {name}) {
+  res.render('location-review-form', {
+      title: `Review ${name} on Loc8r`,
+      pageHeader: { title: `Review ${name}` }
+  });
+};
+
+const doAddReview = (req, res) => {
 };
 
 module.exports = {
   homelist,
   locationInfo,
-  addReview
+  addReview,
+  doAddReview
 };
