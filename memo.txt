@@ -1,25 +1,59 @@
-네번째 과제는 에러 사이트 방식 대신 사이트 이동 없이 경고문으로 알려주는 유효성 검사 출력 방식을 사용하는 과제입니다.
-스키마 레벨에서 일반적으로 유효성 검사 비통과 에러는 ValidationError라는 이름을 가집니다.
-따라서 statusCode가 400이고, name이 존재하면서 ValidationError면 유효성 검사 비통과 에러라는 뜻이라,
-이 조건을 그대로 doAddReview의 request 요청 내 if-else if-else의 else if 조건에 추가하여 해당 에러를 걸러낸 뒤,
-에러에 대해서 redirect 메서드로 다시 해당 "장소"에 대한 리뷰 추가 사이트로 돌려보내되, 끝에 쿼리 스트링으로 err=val을 추가했습니다.
-이는 기존 "장소" 추가와는 다른 문제 상황으로 왔다는 것을 알리고, 그에 대한 사이트 처리를 위해서 존재하는 추가 정보입니다.
-redirect 메서드에는 다음이 기재됩니다. `/location/${locationid}/review/new?err=val`
+다섯번째 과제입니다. 이번 과제는 할 일이 꽤 많았습니다.
+먼저, 앱 레벨의 유효성 검사 및 브라우저 레벨의 유효성 검사를 구현하고, 그 이후 .env를 사용하여 특정 변수들의 창고를 만든 뒤,
+특정 변수에 값을 갈아끼우는 방식의 사용법을 다뤄봤습니다.
 
-쿼리 스트링의 존재를 확인하기 위해서는 이에 대한 변수가 필요하여 renderReviewForm에서 error를 따로 지정하여,
-여기에 req.query.err를 지정하여 에러를 저장시켰습니다.
-이 저장한 에러는 location-review-form에서 '-' 기호를 통해 JS 문법을 도입시킨 뒤, if문을 사용하여 출력되게 만들 수 있습니다.
-표현문을 구현하는 데에 부트스트랩 alert 컴포넌트를 사용하여 형태 있게 구현했습니다.
+앱 레벨에서의 유효성 검사를 통해서 미리 확인하는 방법은 각 필드에 값이 있는지 확인하고, 실패 시에는 error 플래그를 쿼리 스트링으로 추가하여
+리디렉션하여 실패 여부를 확인하고 이에 맞춰서 대처할 수 있게 하고, 성공한다면 요청 메서드를 계속 진행하게 하면 됩니다.
 
-- if (error == "val) 
-  [alert 부트스트랩문 및 내용]
+그래서 doAddReview의 request 전에 if문을 둬서 postdata, 즉 폼 데이터의 각 요소인 author, rating, reviewText 중 단 하나라도 
+존재하지 않는다면 if문에 걸려서 redirect 메서드를 거쳐 /location/${locationid}/review/new?err=val로 가게 하여 실패를 인식하게 만들었습니다.
+예) if (!postdata.author || !postdata.rating || !postdata.reviewText) { res.redirect(`/location/${locationid}/review/new?err=val`)};
 
-이런 방식입니다. 내용은 경고문의 내용이 됩니다.
-내용에 영문을 채워서 출력 화면에서 채운 영문의 경고문이 뜨는 것을 확인하실 수 있습니다.
-뜻은 "모든 필드가 required, 다시 시도하세요" 라는 뜻입니다.
+아니라면 else문으로 들어가서 request 메서드로 정상적으로 들어가게 만들었습니다.
 
-출력 화면에서 정상적으로 유효성 검사에 의해 경고문도 잘 뜨는 것을 확인하실 수 있습니다.
+다음은 앱 레벨보다 더 앞서서 브라우저 레벨의 유효성 검사를 구현하는 파트입니다.
+폼이 제출되기도 전에 에러를 찾는 방법으로 이 상태에서는 redirect를 하지 않아 같은 페이지에 머물게 하여 가장 베스트입니다.
+브라우저 수준에서 유효성 검사를 하기 위해서는 당연히 JavaScript를 실행해야합니다. 이를 위해서 앱의 public 폴더에 유효성 검사 파일을 둬서
+static 파일로 간주하여 브라우저에서 실행되게 했습니다.
 
+이를 위해서 validation.js라는 파일을 만들고, 거기에 유효성 검사 코드들을 기재했습니다.
+리뷰 폼인 #addReview의 submit(제출) 이벤트를 리스닝합니다. e로 이벤트를 받고 function 익명 함수로 들어갑니다.
+처음에는 alert 경고 문을 숨기고, if문으로 input - name, select - rating, textarea - review가 존재하지 않는 지를 체크합니다.
+예) if (!$('input#name').val() || !$('select#rating_).val() || !$('textarea#review').val()) { ... }
+val은 바로 유효성 검사 메서드로, true라면 !와 만나 false가 되어 유효성 검사를 통과하여 name에 존재한다는 것이니 if문에 들어가지 않습니다. (false)
+셋 중 하나라도 true면 들어가지만, 셋 모두 false면 if문에 들어가지 않습니다.
 
+if문에 들어가면 유효성 검사 미통과라는 뜻으로 처리 프로세스가 작동합니다.
+alert문에 해당하는 $('.alert.alert-danger')의 length가 존재하는 지를 확인합니다, 경고문이 있는 지를 확인한 뒤,
+이를 show 메서드로 띄우게 됩니다. 만약에 애초에 경고문이 존재하지 않는 무존재 상태였다면 $(this).prepend(...)로 들어가서
+직접 <div> 태그를 이용해 경고문 내용과 양식을 작성하여 직접 <div> 요소를 추가하여 경고문을 생성하게 만들었습니다.
+div 요소의 role은 alert, class는 alert, alert-danger, 내용은 All fields required, please try again,
+아까 봤던 경고문이랑 정확히 똑같은 것을 보실 수 있습니다.
+
+이후에는 false를 리턴하고 마무리되게 됩니다.
+
+다음으로 validation.js가 작동하도록 layout.pug에서 script 코드를 이용해서 src에 해당 파일의 경로를 제시했습니다.
+
+마지막으로 .env입니다. .env는 MongoDB Atlas와 Render Hosting을 위해서 꼭 필요한 파일입니다.
+많은 변수를 상수로 대체하고, 상수를 매번 원하는 값으로 자동 교체할 수 있도록 매칭 값을 기재하는 창고 역할을 합니다.
+dotenv를 설치한 뒤, app.js에서 사용하도록 require를 시켰습니다. 그 후에는 config 메서드를 거치게 했습니다.
+바로 이 메서드가 .env에 기재된 상수, 정확히는 환경 변수를 매번 로드해서 갈아끼워주는 메서드입니다.
+
+.env에는 3개의 환경 변수를 기재했습니다.
+NODE_ENV, GOOGLE_API_KEY, MONGODB_PASSWORD
+각각 개발환경 표시, 구글 API 지도 키, MongoDB 비밀번호를 뜻하며 여기에 각각 값을 기재했습니다.
+
+다음으로 이제 MongoDB Atlas를 쓰기 위해 dbURI를 dbPassword와 dbURI 파트로 바꿨습니다.
+dbPassword는 매번 .env 파일에서 불러오도록 process.env.MONGODB_PASSWORD가 들어가게 했으며,
+dbURI는 공식 MongoDB Atals 경로 양식에 의거하여 지정했습니다, 비밀번호는 dbPassword가 들어가도록 ${dbPassword} 이렇게 넣었습니다.
+이제 매번 .env에서 비밀번호를 불러오고 경로에 넣어서 DB에 접근할 수 있게 만들었습니다.
+
+location-info.pug에서도 기존 키 입력 부분을 ${process.env.GOOGLE_API_KEY}로 변경하여 더 이상 pug에 비밀번호를 입력하지 않아도
+되게 개선했습니다.
+
+이 모든 환경 변수 설정 과정은 이후에 있을 Render Hosting에 필요합니다.
+출력 화면을 유도하기 위해 14.1을 참고하여 MongoDB Atlas를 구축하고, 기존 로컬 DB에서 모든 데이터를 데려와서 정착시킨 뒤,
+정확한 유저명과 비밀번호에 의거한 경로가 사용되도록 환경 변수 값을 .env에 기재하여 정상적으로 접속하게 하여
+Atlas에서 데이터를 불러오는 방식으로 정상적으로 "장소" 리스트가 뜨는 것을 확인하실 수 있습니다.
 
 

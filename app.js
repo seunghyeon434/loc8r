@@ -1,5 +1,6 @@
-var createError = require('http-errors');
-var express = require('express');
+require('dotenv').config();
+const createError = require('http-errors');
+const express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
